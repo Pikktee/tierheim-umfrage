@@ -792,14 +792,14 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                     <th scope="col">Nr.</th>
                     <th scope="col">Zeitstempel</th>
                     <th scope="col">Zielgruppen</th>
+                    {selectedQuestion && !relevantQuestions.includes(selectedQuestion.id) ? (
+                      <th scope="col">{selectedQuestion.label}</th>
+                    ) : null}
                     {relevantQuestions.map((questionId) => (
                       <th key={questionId} scope="col">
                         {surveyData.questions.find((question) => question.id === questionId)?.label ?? questionId}
                       </th>
                     ))}
-                    {selectedQuestion && !relevantQuestions.includes(selectedQuestion.id) ? (
-                      <th scope="col">{selectedQuestion.label}</th>
-                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -808,12 +808,12 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                       <td>{record.number}</td>
                       <td>{record.submittedAt}</td>
                       <td>{record.groups}</td>
-                      {record.relevantAnswers.map((entry) => (
-                        <td key={`${record.number}-${entry.questionId}`}>{entry.value}</td>
-                      ))}
                       {selectedQuestion && !relevantQuestions.includes(selectedQuestion.id) ? (
                         <td>{record.answer}</td>
                       ) : null}
+                      {record.relevantAnswers.map((entry) => (
+                        <td key={`${record.number}-${entry.questionId}`}>{entry.value}</td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
