@@ -115,33 +115,43 @@ function CopyIcon() {
 }
 
 const PIE_LABEL_RADIAN = Math.PI / 180;
+const PIE_OUTER_RADIUS = 120;
 
 function renderPiePercentLabel(props: import("recharts").PieLabelRenderProps) {
   const cx = Number(props.cx ?? 0);
   const cy = Number(props.cy ?? 0);
   const midAngle = Number(props.midAngle ?? 0);
-  const innerRadius = Number(props.innerRadius ?? 0);
-  const outerRadius = Number(props.outerRadius ?? 0);
   const percent = Number(props.percent ?? 0);
   const payload = props.payload as { percentage?: string } | undefined;
   if (percent < 0.03 || !payload?.percentage) {
     return null;
   }
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.55;
-  const x = cx + radius * Math.cos(-midAngle * PIE_LABEL_RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * PIE_LABEL_RADIAN);
+  const sin = Math.sin(-PIE_LABEL_RADIAN * midAngle);
+  const cos = Math.cos(-PIE_LABEL_RADIAN * midAngle);
+  const sx = cx + PIE_OUTER_RADIUS * cos;
+  const sy = cy + PIE_OUTER_RADIUS * sin;
+  const mx = cx + (PIE_OUTER_RADIUS + 16) * cos;
+  const my = cy + (PIE_OUTER_RADIUS + 16) * sin;
+  const ex = cx + (PIE_OUTER_RADIUS + 24) * cos;
+  const ey = cy + (PIE_OUTER_RADIUS + 24) * sin;
+  const textAnchor = cos >= 0 ? "start" : "end";
+  const textX = ex + (cos >= 0 ? 5 : -5);
   return (
-    <text
-      x={x}
-      y={y}
-      fill="#1F1A17"
-      textAnchor="middle"
-      dominantBaseline="central"
-      fontSize={12}
-      fontWeight={600}
-    >
-      {payload.percentage}
-    </text>
+    <g>
+      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="rgba(92,70,47,0.3)" strokeWidth={1.2} fill="none" />
+      <circle cx={ex} cy={ey} r={2} fill="rgba(92,70,47,0.35)" />
+      <text
+        x={textX}
+        y={ey}
+        textAnchor={textAnchor}
+        dominantBaseline="central"
+        fontSize={12}
+        fontWeight={600}
+        fill="#4a3e34"
+      >
+        {payload.percentage}
+      </text>
+    </g>
   );
 }
 
@@ -616,14 +626,14 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                 role="img"
                 aria-label={`Kreisdiagramm zur Frage ${selectedQuestion?.label} mit ${chartData.length} Antwortoptionen.`}
               >
-                <ResponsiveContainer width="100%" height={Math.max(380, 420)}>
-                  <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                <ResponsiveContainer width="100%" height={460}>
+                  <PieChart margin={{ top: 20, right: 60, left: 60, bottom: 20 }}>
                     <Pie
                       data={chartData}
                       dataKey="count"
                       nameKey="label"
-                      innerRadius={82}
-                      outerRadius={140}
+                      innerRadius={68}
+                      outerRadius={PIE_OUTER_RADIUS}
                       paddingAngle={2}
                       label={renderPiePercentLabel}
                       labelLine={false}
