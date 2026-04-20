@@ -534,6 +534,18 @@ legend.control-label {
 
 .modal-card-wide {
   width: min(1080px, 100%);
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-card-wide .modal-header {
+  flex: 0 0 auto;
+}
+
+.modal-card-wide .table-scrollbar {
+  flex: 0 0 auto;
 }
 
 .modal-header {
@@ -593,18 +605,31 @@ legend.control-label {
 
 .table-wrap {
   margin-top: 1rem;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: auto;
-  max-height: min(56vh, 520px);
+  flex: 1 1 auto;
+  min-height: 0;
   border: 1px solid rgba(92, 70, 47, 0.1);
   border-radius: 16px 16px 0 0;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(181, 93, 50, 0.55) transparent;
 }
 
 .table-wrap::-webkit-scrollbar {
+  width: 12px;
   height: 0;
-  width: 0;
+}
+
+.table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.table-wrap::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(181, 93, 50, 0.5);
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }
 
 .records-table {

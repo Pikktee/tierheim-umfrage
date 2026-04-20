@@ -734,7 +734,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                         {surveyData.questions.find((question) => question.id === questionId)?.label ?? questionId}
                       </th>
                     ))}
-                    <th scope="col">Antwort</th>
+                    <th scope="col">{selectedQuestion?.label ?? "Antwort"}</th>
                   </tr>
                 </thead>
                 <tbody>
