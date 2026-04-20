@@ -219,8 +219,8 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
       ].join("\n"),
     )
     .join("\n\n");
-  const recordsForModal = filteredRecords.map((record, index) => ({
-    number: index + 1,
+  const recordsForModal = filteredRecords.map((record) => ({
+    number: record.csvRow,
     submittedAt: record.submittedAt,
     groups:
       record.groups.length > 0
@@ -399,8 +399,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                 {selectedQuestion?.label}
               </h2>
               <p className="selection-count" aria-live="polite">
-                <span className="selection-count-value">{filteredRecords.length}</span>
-                <span className="selection-count-label">Datensätze in der Auswahl</span>
+                {filteredRecords.length} Datensätze in der Auswahl
               </p>
             </div>
             <div className="chart-actions">

@@ -15,6 +15,7 @@ export type SurveyQuestion = {
 
 export type SurveyRecord = {
   id: string;
+  csvRow: number;
   submittedAt: string;
   ageBracket: string;
   groups: TargetGroupId[];

@@ -257,18 +257,20 @@ async function loadSurveyData(): Promise<SurveyData> {
   const questions: SurveyQuestion[] = [...groupedQuestions, ...remainingQuestions];
 
   const records: SurveyRecord[] = parsed.data
-    .filter(hasValidTimestamp)
-    .map((row, index) => {
-    const ageBracket = normalizeAge(row[AGE_QUESTION] ?? "");
-    const answers = Object.fromEntries(
-      questions.map((question) => [
-        question.id,
-        normalizeAnswer(question.id, row[question.id] ?? ""),
-      ]),
-    );
+    .map((row, index) => ({ row, csvRow: index + 2 }))
+    .filter(({ row }) => hasValidTimestamp(row))
+    .map(({ row, csvRow }, index) => {
+      const ageBracket = normalizeAge(row[AGE_QUESTION] ?? "");
+      const answers = Object.fromEntries(
+        questions.map((question) => [
+          question.id,
+          normalizeAnswer(question.id, row[question.id] ?? ""),
+        ]),
+      );
 
       return {
         id: `response-${index + 1}`,
+        csvRow,
         submittedAt: row["Zeitstempel"]?.trim() || "Keine Angabe",
         ageBracket,
         groups: getGroups(row, ageBracket),
