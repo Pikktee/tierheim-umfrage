@@ -393,7 +393,8 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
           </div>
 
           <div className="chart-header">
-            <div>
+            <div className="chart-heading">
+              <p className="small-note chart-kicker">Frage:</p>
               <h2 className="chart-title" id="chart-title">
                 {selectedQuestion?.label}
               </h2>
