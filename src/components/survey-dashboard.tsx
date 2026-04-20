@@ -89,7 +89,7 @@ function buildChartData(records: SurveyData["records"], questionId: string) {
     }
   }
 
-  return [...counts.entries()]
+  const entries = [...counts.entries()]
     .map(([label, count], index) => ({
       label,
       count,
@@ -97,6 +97,8 @@ function buildChartData(records: SurveyData["records"], questionId: string) {
       fill: chartColors[index % chartColors.length],
     }))
     .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, "de"));
+
+  return { entries, respondents };
 }
 
 function CopyIcon() {
@@ -333,9 +335,9 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
     return surveyData.records.filter((record) => record.groups.includes(selectedGroupId));
   }, [selectedGroupId, surveyData.records]);
 
-  const chartData = useMemo(() => {
+  const { entries: chartData, respondents: chartRespondents } = useMemo(() => {
     if (!selectedQuestion) {
-      return [];
+      return { entries: [], respondents: 0 };
     }
 
     return buildChartData(filteredRecords, selectedQuestion.id);
@@ -363,7 +365,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
       return {
         groupLabel: group.label,
         total: records.length,
-        items: buildChartData(records, selectedQuestion.id).map((entry) => ({
+        items: buildChartData(records, selectedQuestion.id).entries.map((entry) => ({
           label: entry.label,
           count: entry.count,
           percentage: entry.percentage,
@@ -558,7 +560,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                 {selectedQuestion?.label}
               </h2>
               <p className="selection-count" aria-live="polite">
-                {filteredRecords.length} Antworten in der Auswahl
+                {chartRespondents} Antworten in der Auswahl
               </p>
             </div>
             <div className="chart-actions">
