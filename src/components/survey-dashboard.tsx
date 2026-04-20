@@ -385,7 +385,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
     });
   }, [activeGroup, selectedGroupId, selectedQuestion, surveyData.records]);
 
-  const figJamText = summarySections
+  const figJamPlainText = summarySections
     .map((section) =>
       [
         toBoldUnicode(section.groupLabel),
@@ -397,6 +397,26 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
       ].join("\n"),
     )
     .join("\n");
+
+  const figJamHtmlText =
+    "<div>" +
+    summarySections
+      .map(
+        (section) =>
+          `<p><strong>${section.groupLabel}</strong></p>` +
+          (section.items.length > 0
+            ? "<ul>" +
+              section.items
+                .map(
+                  (entry) =>
+                    `<li>${toBoldUnicode(entry.percentage)} – ${entry.label} (${entry.count}/${section.total})</li>`,
+                )
+                .join("") +
+              "</ul>"
+            : "<p>Keine Angaben</p>"),
+      )
+      .join("") +
+    "</div>";
   const recordsForModal = filteredRecords.map((record) => ({
     number: record.csvRow,
     submittedAt: record.submittedAt,
@@ -479,7 +499,12 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
 
   async function handleCopySummary() {
     try {
-      await navigator.clipboard.writeText(figJamText);
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([figJamHtmlText], { type: "text/html" }),
+          "text/plain": new Blob([figJamPlainText], { type: "text/plain" }),
+        }),
+      ]);
       setCopyStatus("copied");
       window.setTimeout(() => setCopyStatus("idle"), 1600);
     } catch {
