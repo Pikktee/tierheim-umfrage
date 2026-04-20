@@ -77,11 +77,13 @@ function formatPercentage(count: number, total: number): string {
 
 function buildChartData(records: SurveyData["records"], questionId: string) {
   const counts = new Map<string, number>();
+  let respondents = 0;
 
   for (const record of records) {
-    const answers = record.answers[questionId] ?? ["Keine Angabe"];
+    const answers = record.answers[questionId] ?? [];
+    if (answers.length === 0) continue;
+    respondents++;
     const uniqueAnswers = [...new Set(answers)];
-
     for (const answer of uniqueAnswers) {
       counts.set(answer, (counts.get(answer) ?? 0) + 1);
     }
@@ -91,7 +93,7 @@ function buildChartData(records: SurveyData["records"], questionId: string) {
     .map(([label, count], index) => ({
       label,
       count,
-      percentage: formatPercentage(count, records.length),
+      percentage: formatPercentage(count, respondents),
       fill: chartColors[index % chartColors.length],
     }))
     .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, "de"));
@@ -556,7 +558,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                 {selectedQuestion?.label}
               </h2>
               <p className="selection-count" aria-live="polite">
-                {filteredRecords.length} Datensätze in der Auswahl
+                {filteredRecords.length} Antworten in der Auswahl
               </p>
             </div>
             <div className="chart-actions">

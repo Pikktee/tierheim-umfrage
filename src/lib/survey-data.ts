@@ -149,15 +149,13 @@ function normalizeAnswer(question: string, rawValue: string): string[] {
   const cleaned = rawValue.trim();
 
   if (!cleaned) {
-    return ["Keine Angabe"];
+    return [];
   }
 
   if (MULTI_SELECT_QUESTIONS.has(question)) {
-    const parts = splitMultiValue(cleaned)
+    return splitMultiValue(cleaned)
       .map((part) => part.trim())
       .filter(Boolean);
-
-    return parts.length > 0 ? parts : ["Keine Angabe"];
   }
 
   return [question === AGE_QUESTION ? normalizeAge(cleaned) : cleaned];
