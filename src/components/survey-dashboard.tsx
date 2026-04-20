@@ -114,6 +114,130 @@ function CopyIcon() {
   );
 }
 
+function ChevronIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none">
+      <path
+        d="M6 9l6 6 6-6"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
+      <path
+        d="M5 12.5l4.5 4.5L19 7.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+type QuestionSelectProps = {
+  groups: Array<{ label: string; questions: SurveyData["questions"] }>;
+  value: string;
+  onChange: (id: string) => void;
+  labelledBy: string;
+  id: string;
+};
+
+function QuestionSelect({ groups, value, onChange, labelledBy, id }: QuestionSelectProps) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+
+  const allQuestions = useMemo(() => groups.flatMap((group) => group.questions), [groups]);
+  const selected = allQuestions.find((question) => question.id === value);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const handlePointer = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [open]);
+
+  return (
+    <div className="question-select" ref={containerRef}>
+      <button
+        ref={triggerRef}
+        id={id}
+        type="button"
+        className="question-select-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-labelledby={labelledBy}
+        data-open={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span className="question-select-value">{selected?.label ?? "Frage wählen"}</span>
+        <span className="question-select-caret" aria-hidden="true">
+          <ChevronIcon />
+        </span>
+      </button>
+      {open ? (
+        <div className="question-select-panel" role="listbox" aria-labelledby={labelledBy}>
+          {groups.map((group) => (
+            <div className="question-select-group" key={group.label}>
+              <div className="question-select-group-label">{group.label}</div>
+              {group.questions.map((question) => {
+                const active = question.id === value;
+                return (
+                  <button
+                    key={question.id}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    data-active={active}
+                    className="question-select-option"
+                    onClick={() => {
+                      onChange(question.id);
+                      setOpen(false);
+                      triggerRef.current?.focus();
+                    }}
+                  >
+                    <span className="question-select-option-check" aria-hidden="true">
+                      {active ? <CheckIcon /> : null}
+                    </span>
+                    <span>{question.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function InfoIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
@@ -126,6 +250,7 @@ function InfoIcon() {
 
 export function SurveyDashboard({ surveyData }: DashboardProps) {
   const questionSelectId = useId();
+  const questionSelectLabelId = useId();
   const filterGroupId = useId();
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
   const tableInnerRef = useRef<HTMLTableElement | null>(null);
@@ -332,25 +457,16 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
         <section className="card chart-panel" aria-labelledby="chart-title">
           <div className="controls controls-inline">
             <div className="control-group">
-              <label className="control-label" htmlFor={questionSelectId}>
+              <span className="control-label" id={questionSelectLabelId}>
                 Frage
-              </label>
-              <select
-                className="select-input"
+              </span>
+              <QuestionSelect
                 id={questionSelectId}
+                labelledBy={questionSelectLabelId}
+                groups={questionGroups}
                 value={selectedQuestionId}
-                onChange={(event) => setSelectedQuestionId(event.target.value)}
-              >
-                {questionGroups.map((group) => (
-                  <optgroup key={group.label} label={group.label}>
-                    {group.questions.map((question) => (
-                      <option key={question.id} value={question.id}>
-                        {question.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
+                onChange={setSelectedQuestionId}
+              />
             </div>
 
             <fieldset className="control-group">
