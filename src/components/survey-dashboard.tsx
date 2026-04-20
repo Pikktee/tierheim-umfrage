@@ -803,10 +803,11 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="records-modal-title"
+            style={tableScrollWidth > 0 ? { width: tableScrollWidth + 2 * 20 } : undefined}
           >
             <div className="modal-header">
               <div>
-                <p className="small-note">Datensaetze hinter dem Chart</p>
+                <p className="small-note">Datensätze hinter dem Chart</p>
                 <h2 className="modal-title" id="records-modal-title">
                   {selectedQuestion?.label}
                 </h2>
