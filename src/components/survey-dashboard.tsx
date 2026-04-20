@@ -628,8 +628,8 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                 role="img"
                 aria-label={`Kreisdiagramm zur Frage ${selectedQuestion?.label} mit ${chartData.length} Antwortoptionen.`}
               >
-                <ResponsiveContainer width="100%" height={460}>
-                  <PieChart margin={{ top: 20, right: 60, left: 60, bottom: 20 }}>
+                <ResponsiveContainer width="100%" height={430}>
+                  <PieChart margin={{ top: 0, right: 60, left: 60, bottom: 20 }}>
                     <Pie
                       data={chartData}
                       dataKey="count"
