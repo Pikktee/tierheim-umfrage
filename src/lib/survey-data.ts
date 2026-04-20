@@ -91,6 +91,7 @@ const QUESTION_GROUPS: Array<{ label: string; questions: string[] }> = [
 ];
 
 let surveyDataPromise: Promise<SurveyData> | undefined;
+const TIMESTAMP_PATTERN = /^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}$/;
 
 function normalizeAge(value: string): string {
   const cleaned = value.trim();
@@ -160,6 +161,11 @@ function normalizeAnswer(question: string, rawValue: string): string[] {
   }
 
   return [question === AGE_QUESTION ? normalizeAge(cleaned) : cleaned];
+}
+
+function hasValidTimestamp(row: Record<string, string>): boolean {
+  const submittedAt = row["Zeitstempel"]?.trim() ?? "";
+  return TIMESTAMP_PATTERN.test(submittedAt);
 }
 
 function isAdopter(row: Record<string, string>): boolean {
@@ -250,7 +256,9 @@ async function loadSurveyData(): Promise<SurveyData> {
 
   const questions: SurveyQuestion[] = [...groupedQuestions, ...remainingQuestions];
 
-  const records: SurveyRecord[] = parsed.data.map((row, index) => {
+  const records: SurveyRecord[] = parsed.data
+    .filter(hasValidTimestamp)
+    .map((row, index) => {
     const ageBracket = normalizeAge(row[AGE_QUESTION] ?? "");
     const answers = Object.fromEntries(
       questions.map((question) => [
@@ -259,14 +267,14 @@ async function loadSurveyData(): Promise<SurveyData> {
       ]),
     );
 
-    return {
-      id: `response-${index + 1}`,
-      submittedAt: row["Zeitstempel"]?.trim() || "Keine Angabe",
-      ageBracket,
-      groups: getGroups(row, ageBracket),
-      answers,
-    };
-  });
+      return {
+        id: `response-${index + 1}`,
+        submittedAt: row["Zeitstempel"]?.trim() || "Keine Angabe",
+        ageBracket,
+        groups: getGroups(row, ageBracket),
+        answers,
+      };
+    });
 
   return {
     totalResponses: records.length,
