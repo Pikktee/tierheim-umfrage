@@ -398,11 +398,12 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
               <h2 className="chart-title" id="chart-title">
                 {selectedQuestion?.label}
               </h2>
+              <p className="selection-count" aria-live="polite">
+                <span className="selection-count-value">{filteredRecords.length}</span>
+                <span className="selection-count-label">Datensätze in der Auswahl</span>
+              </p>
             </div>
             <div className="chart-actions">
-              <p className="selection-count" aria-live="polite">
-                <strong>{filteredRecords.length}</strong> Datensätze in der Auswahl
-              </p>
               <div className="action-row">
                 <button
                   className="secondary-button"
