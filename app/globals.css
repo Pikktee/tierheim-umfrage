@@ -602,6 +602,12 @@ legend.control-label {
   margin: 0 0 0.65rem;
 }
 
+.modal-empty-note {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+}
+
 .table-wrap {
   margin-top: 1rem;
   overflow-x: hidden;

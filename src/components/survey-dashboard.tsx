@@ -383,9 +383,11 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
     .map((section) =>
       [
         `**${section.groupLabel}**`,
-        ...section.items.map(
-          (entry) => `- ${entry.label}: ${entry.percentage} (${entry.count}/${section.total})`,
-        ),
+        ...(section.items.length > 0
+          ? section.items.map(
+              (entry) => `- **${entry.percentage}** - ${entry.label} (${entry.count}/${section.total})`,
+            )
+          : ["- Keine Angaben"]),
       ].join("\n"),
     )
     .join("\n\n");
@@ -730,13 +732,17 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                   <p className="summary-group-label">
                     <strong>{section.groupLabel}</strong>
                   </p>
-                  <ul className="modal-list">
-                    {section.items.map((entry) => (
-                      <li key={`${section.groupLabel}-${entry.label}`}>
-                        {entry.label}: {entry.percentage} ({entry.count}/{section.total})
-                      </li>
-                    ))}
-                  </ul>
+                  {section.items.length > 0 ? (
+                    <ul className="modal-list">
+                      {section.items.map((entry) => (
+                        <li key={`${section.groupLabel}-${entry.label}`}>
+                          <strong>{entry.percentage}</strong> – {entry.label} ({entry.count}/{section.total})
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="modal-empty-note">Keine Angaben</p>
+                  )}
                 </section>
               ))}
             </div>
