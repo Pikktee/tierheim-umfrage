@@ -394,13 +394,14 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
 
           <div className="chart-header">
             <div>
-              <p className="small-note">Filter: {activeGroup.label}</p>
               <h2 className="chart-title" id="chart-title">
                 {selectedQuestion?.label}
               </h2>
             </div>
             <div className="chart-actions">
-              <p className="small-note">{filteredRecords.length} Datensaetze in der Auswahl</p>
+              <p className="selection-count" aria-live="polite">
+                <strong>{filteredRecords.length}</strong> Datensätze in der Auswahl
+              </p>
               <div className="action-row">
                 <button
                   className="secondary-button"
@@ -414,7 +415,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                   type="button"
                   onClick={() => setIsSummaryModalOpen(true)}
                 >
-                Textausgabe
+                  Textausgabe
                 </button>
               </div>
             </div>
@@ -505,11 +506,11 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
             </div>
           )}
 
-          <p className="legend-note">
-            {isMultiSelect
-              ? "Mehrfachauswahl wird als Balkendiagramm gezeigt. Die Prozentwerte koennen in Summe ueber 100 % liegen."
-              : "Einfachauswahl wird als Kreisdiagramm gezeigt. Die Prozentwerte beziehen sich auf die aktuell gefilterte Auswahl."}
-          </p>
+          {isMultiSelect ? (
+            <p className="legend-note">
+              Mehrfachauswahl wird als Balkendiagramm gezeigt. Die Prozentwerte koennen in Summe ueber 100 % liegen.
+            </p>
+          ) : null}
         </section>
       </section>
 

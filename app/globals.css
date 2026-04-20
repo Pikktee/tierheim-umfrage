@@ -34,7 +34,8 @@ body {
   min-height: 100vh;
   color: var(--text);
   background: transparent;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Arial, sans-serif;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -262,26 +263,40 @@ legend.control-label {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  align-items: flex-start;
+  align-items: flex-end;
+  flex-wrap: wrap;
 }
 
 .chart-title {
-  margin: 0.25rem 0 0;
+  margin: 0;
   font-size: clamp(1.45rem, 2vw, 2.1rem);
   line-height: 1.14;
+  max-width: 22ch;
 }
 
 .chart-actions {
   display: grid;
   justify-items: end;
-  gap: 0.5rem;
+  gap: 0.65rem;
+  margin-left: auto;
+  flex: 0 1 auto;
+}
+
+.selection-count {
+  margin: 0;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  background: var(--secondary-soft);
+  color: var(--secondary);
+  line-height: 1.35;
 }
 
 .action-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   gap: 0.55rem;
+  white-space: nowrap;
 }
 
 .secondary-button,
@@ -298,6 +313,7 @@ legend.control-label {
   padding: 0.72rem 1rem;
   border-radius: 999px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .secondary-button:hover,
@@ -539,6 +555,8 @@ legend.control-label {
 
   .chart-actions {
     justify-items: start;
+    margin-left: 0;
+    width: 100%;
   }
 
   .chip-group {
@@ -573,11 +591,13 @@ legend.control-label {
 
   .action-row {
     width: 100%;
-    justify-content: stretch;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
   }
 
   .secondary-button {
     flex: 1;
+    min-width: 0;
   }
 }
 
