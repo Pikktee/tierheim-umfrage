@@ -27,6 +27,33 @@ type DashboardProps = {
   surveyData: SurveyData;
 };
 
+const AGE_QUESTION = "Wie alt bist du?";
+const ADOPTED_QUESTION = "Hast du bereits ein Haustier aus einem Tierheim adoptiert?";
+const FUTURE_ADOPTION_QUESTION =
+  "Kannst du dir vorstellen, künftig ein Haustier aus einem Tierheim zu adoptieren?";
+const SURRENDERED_QUESTION = "Hast du schon einmal ein Haustier bei einem Tierheim abgegeben?";
+const FUTURE_SURRENDER_QUESTION =
+  "Könntest du dir vorstellen, ein Haustier an ein Tierheim abzugeben, wenn es die Umstände erfordern würden?";
+const VOLUNTEERED_QUESTION = "Warst du schon einmal ehrenamtlich engagiert?";
+const ACTIVE_VOLUNTEER_QUESTION = "Engagierst du dich ehrenamtlich?";
+
+const relevantQuestionsByGroup: Record<TargetGroupId, string[]> = {
+  all: [
+    AGE_QUESTION,
+    ADOPTED_QUESTION,
+    FUTURE_ADOPTION_QUESTION,
+    SURRENDERED_QUESTION,
+    FUTURE_SURRENDER_QUESTION,
+    VOLUNTEERED_QUESTION,
+    ACTIVE_VOLUNTEER_QUESTION,
+  ],
+  "adopters-25-35": [AGE_QUESTION, ADOPTED_QUESTION, FUTURE_ADOPTION_QUESTION],
+  "adopters-35-45": [AGE_QUESTION, ADOPTED_QUESTION, FUTURE_ADOPTION_QUESTION],
+  "adopters-45-59": [AGE_QUESTION, ADOPTED_QUESTION, FUTURE_ADOPTION_QUESTION],
+  "surrendering-18-24": [AGE_QUESTION, SURRENDERED_QUESTION, FUTURE_SURRENDER_QUESTION],
+  "volunteers-25-30": [AGE_QUESTION, VOLUNTEERED_QUESTION, ACTIVE_VOLUNTEER_QUESTION],
+};
+
 const chartColors = [
   "#B55D32",
   "#2F6F62",
@@ -126,13 +153,13 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
 
   const activeGroup = targetGroups.find((group) => group.id === selectedGroupId) ?? targetGroups[0];
   const isMultiSelect = selectedQuestion?.multiSelect ?? false;
+  const relevantQuestions = relevantQuestionsByGroup[selectedGroupId];
   const modalText = chartData
     .map((entry) => `${entry.label}: ${entry.percentage} (${entry.count}/${filteredRecords.length})`)
     .join("\n");
-  const recordsForModal = filteredRecords.map((record) => ({
-    id: record.id,
+  const recordsForModal = filteredRecords.map((record, index) => ({
+    number: index + 1,
     submittedAt: record.submittedAt,
-    ageBracket: record.ageBracket,
     groups:
       record.groups.length > 0
         ? record.groups
@@ -140,6 +167,11 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
             .join(", ")
         : "Keine Zuordnung",
     answer: (selectedQuestion ? record.answers[selectedQuestion.id] : ["Keine Angabe"]).join(", "),
+    relevantAnswers: relevantQuestions.map((questionId) => ({
+      questionId,
+      questionLabel: surveyData.questions.find((question) => question.id === questionId)?.label ?? questionId,
+      value: (record.answers[questionId] ?? ["Keine Angabe"]).join(", "),
+    })),
   }));
 
   useEffect(() => {
@@ -452,20 +484,26 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
               <table className="records-table">
                 <thead>
                   <tr>
-                    <th scope="col">Datensatz</th>
+                    <th scope="col">Nr.</th>
                     <th scope="col">Zeitstempel</th>
-                    <th scope="col">Alter</th>
                     <th scope="col">Zielgruppen</th>
+                    {relevantQuestions.map((questionId) => (
+                      <th key={questionId} scope="col">
+                        {surveyData.questions.find((question) => question.id === questionId)?.label ?? questionId}
+                      </th>
+                    ))}
                     <th scope="col">Antwort</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recordsForModal.map((record) => (
-                    <tr key={record.id}>
-                      <td>{record.id}</td>
+                    <tr key={`${record.number}-${record.submittedAt}`}>
+                      <td>{record.number}</td>
                       <td>{record.submittedAt}</td>
-                      <td>{record.ageBracket}</td>
                       <td>{record.groups}</td>
+                      {record.relevantAnswers.map((entry) => (
+                        <td key={`${record.number}-${entry.questionId}`}>{entry.value}</td>
+                      ))}
                       <td>{record.answer}</td>
                     </tr>
                   ))}

@@ -396,15 +396,18 @@ select:focus-visible {
 
 .table-wrap {
   margin-top: 1rem;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
   border: 1px solid rgba(92, 70, 47, 0.1);
   border-radius: 16px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .records-table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
-  min-width: 760px;
+  min-width: 980px;
   background: #fffdf9;
 }
 
@@ -414,6 +417,7 @@ select:focus-visible {
   border-bottom: 1px solid rgba(92, 70, 47, 0.08);
   text-align: left;
   vertical-align: top;
+  min-width: 150px;
 }
 
 .records-table th {
