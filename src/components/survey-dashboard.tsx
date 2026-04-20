@@ -67,6 +67,16 @@ const chartColors = [
   "#C96D2D",
 ];
 
+function toBoldUnicode(text: string): string {
+  return text.replace(/[0-9A-Za-z]/g, (char) => {
+    const code = char.charCodeAt(0);
+    if (code >= 48 && code <= 57) return String.fromCodePoint(0x1d7ce + code - 48);
+    if (code >= 65 && code <= 90) return String.fromCodePoint(0x1d400 + code - 65);
+    if (code >= 97 && code <= 122) return String.fromCodePoint(0x1d41a + code - 97);
+    return char;
+  });
+}
+
 function formatPercentage(count: number, total: number): string {
   if (total === 0) {
     return "0,0 %";
@@ -374,43 +384,18 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
     });
   }, [activeGroup, selectedGroupId, selectedQuestion, surveyData.records]);
 
-  const modalText = summarySections
-    .map((section) =>
-      [section.groupLabel, ...section.items.map((entry) => `${entry.label}: ${entry.percentage} (${entry.count}/${section.total})`)].join("\n"),
-    )
-    .join("\n\n");
-  const figJamPlainText = summarySections
+  const figJamText = summarySections
     .map((section) =>
       [
-        section.groupLabel,
+        toBoldUnicode(section.groupLabel),
         ...(section.items.length > 0
           ? section.items.map(
-              (entry) => `- ${entry.percentage} - ${entry.label} (${entry.count}/${section.total})`,
+              (entry) => `- ${toBoldUnicode(entry.percentage)} – ${entry.label} (${entry.count}/${section.total})`,
             )
           : ["- Keine Angaben"]),
       ].join("\n"),
     )
     .join("\n");
-
-  const figJamHtmlText =
-    "<div>" +
-    summarySections
-      .map(
-        (section) =>
-          `<p><strong>${section.groupLabel}</strong></p>` +
-          (section.items.length > 0
-            ? "<ul>" +
-              section.items
-                .map(
-                  (entry) =>
-                    `<li><strong>${entry.percentage}</strong> – ${entry.label} (${entry.count}/${section.total})</li>`,
-                )
-                .join("") +
-              "</ul>"
-            : "<p><em>Keine Angaben</em></p>"),
-      )
-      .join("") +
-    "</div>";
   const recordsForModal = filteredRecords.map((record) => ({
     number: record.csvRow,
     submittedAt: record.submittedAt,
@@ -493,12 +478,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
 
   async function handleCopySummary() {
     try {
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          "text/html": new Blob([figJamHtmlText], { type: "text/html" }),
-          "text/plain": new Blob([figJamPlainText], { type: "text/plain" }),
-        }),
-      ]);
+      await navigator.clipboard.writeText(figJamText);
       setCopyStatus("copied");
       window.setTimeout(() => setCopyStatus("idle"), 1600);
     } catch {
