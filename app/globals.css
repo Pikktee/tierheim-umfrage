@@ -561,6 +561,11 @@ legend.control-label {
   line-height: 1.2;
 }
 
+.summary-modal-title {
+  margin: 0.6rem 0 0;
+  font-size: 1.15rem;
+}
+
 .modal-actions {
   display: flex;
   align-items: center;

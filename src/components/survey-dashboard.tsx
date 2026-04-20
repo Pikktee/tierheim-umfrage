@@ -731,12 +731,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
             aria-labelledby="summary-modal-title"
           >
             <div className="modal-header">
-              <div>
-                <p className="small-note">Export nach FigJam</p>
-                <h2 className="modal-title" id="summary-modal-title">
-                  {selectedQuestion?.label}
-                </h2>
-              </div>
+              <p className="small-note">Export nach FigJam</p>
               <div className="modal-actions">
                 <button
                   className="secondary-button copy-button"
@@ -762,6 +757,9 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                 </button>
               </div>
             </div>
+            <h2 className="modal-title summary-modal-title" id="summary-modal-title">
+              {selectedQuestion?.label}
+            </h2>
 
             <div className="summary-sections">
               {summarySections.map((section) => (
