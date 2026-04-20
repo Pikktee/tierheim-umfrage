@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -105,12 +105,16 @@ function InfoIcon() {
 export function SurveyDashboard({ surveyData }: DashboardProps) {
   const questionSelectId = useId();
   const filterGroupId = useId();
+  const tableScrollRef = useRef<HTMLDivElement | null>(null);
+  const tableInnerRef = useRef<HTMLTableElement | null>(null);
+  const bottomScrollRef = useRef<HTMLDivElement | null>(null);
   const [selectedQuestionId, setSelectedQuestionId] = useState(surveyData.questions[0]?.id ?? "");
   const [selectedGroupId, setSelectedGroupId] = useState<TargetGroupId>("all");
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [isRecordsModalOpen, setIsRecordsModalOpen] = useState(false);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied">("idle");
   const [openTooltipId, setOpenTooltipId] = useState<TargetGroupId | null>(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(0);
 
   const selectedQuestion = useMemo(
     () => surveyData.questions.find((question) => question.id === selectedQuestionId) ?? surveyData.questions[0],
@@ -166,11 +170,11 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
             .map((groupId) => targetGroups.find((group) => group.id === groupId)?.label ?? groupId)
             .join(", ")
         : "Keine Zuordnung",
-    answer: selectedQuestion ? record.rawAnswers[selectedQuestion.id] : "Keine Angabe",
+    answer: (selectedQuestion ? record.answers[selectedQuestion.id] : ["Keine Angabe"]).join(", "),
     relevantAnswers: relevantQuestions.map((questionId) => ({
       questionId,
       questionLabel: surveyData.questions.find((question) => question.id === questionId)?.label ?? questionId,
-      value: record.rawAnswers[questionId] ?? "Keine Angabe",
+      value: (record.answers[questionId] ?? ["Keine Angabe"]).join(", "),
     })),
   }));
 
@@ -190,6 +194,52 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isRecordsModalOpen, isSummaryModalOpen]);
+
+  useEffect(() => {
+    if (!isRecordsModalOpen) {
+      return;
+    }
+
+    const syncWidths = () => {
+      setTableScrollWidth(tableInnerRef.current?.scrollWidth ?? 0);
+    };
+
+    syncWidths();
+
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            syncWidths();
+          })
+        : null;
+
+    if (resizeObserver && tableInnerRef.current) {
+      resizeObserver.observe(tableInnerRef.current);
+    }
+
+    window.addEventListener("resize", syncWidths);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", syncWidths);
+    };
+  }, [isRecordsModalOpen, relevantQuestions.length, recordsForModal.length, selectedQuestion?.id]);
+
+  function syncTableScroll(source: "table" | "bottom") {
+    const tableNode = tableScrollRef.current;
+    const bottomNode = bottomScrollRef.current;
+
+    if (!tableNode || !bottomNode) {
+      return;
+    }
+
+    if (source === "table") {
+      bottomNode.scrollLeft = tableNode.scrollLeft;
+      return;
+    }
+
+    tableNode.scrollLeft = bottomNode.scrollLeft;
+  }
 
   async function handleCopySummary() {
     try {
@@ -480,8 +530,12 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
               </div>
             </div>
 
-            <div className="table-wrap">
-              <table className="records-table">
+            <div
+              className="table-wrap"
+              ref={tableScrollRef}
+              onScroll={() => syncTableScroll("table")}
+            >
+              <table className="records-table" ref={tableInnerRef}>
                 <thead>
                   <tr>
                     <th scope="col">Nr.</th>
@@ -509,6 +563,14 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div
+              className="table-scrollbar"
+              ref={bottomScrollRef}
+              onScroll={() => syncTableScroll("bottom")}
+              aria-label="Horizontaler Scrollbalken fuer die Datensatz-Tabelle"
+            >
+              <div style={{ width: tableScrollWidth > 0 ? `${tableScrollWidth}px` : "100%" }} />
             </div>
           </section>
         </div>
