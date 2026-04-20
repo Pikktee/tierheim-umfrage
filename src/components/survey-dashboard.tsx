@@ -195,6 +195,16 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
       [section.groupLabel, ...section.items.map((entry) => `${entry.label}: ${entry.percentage} (${entry.count}/${section.total})`)].join("\n"),
     )
     .join("\n\n");
+  const figJamMarkdownText = summarySections
+    .map((section) =>
+      [
+        `**${section.groupLabel}**`,
+        ...section.items.map(
+          (entry) => `- ${entry.label}: ${entry.percentage} (${entry.count}/${section.total})`,
+        ),
+      ].join("\n"),
+    )
+    .join("\n\n");
   const recordsForModal = filteredRecords.map((record, index) => ({
     number: index + 1,
     submittedAt: record.submittedAt,
@@ -277,7 +287,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
 
   async function handleCopySummary() {
     try {
-      await navigator.clipboard.writeText(modalText);
+      await navigator.clipboard.writeText(figJamMarkdownText);
       setCopyStatus("copied");
       window.setTimeout(() => setCopyStatus("idle"), 1600);
     } catch {
