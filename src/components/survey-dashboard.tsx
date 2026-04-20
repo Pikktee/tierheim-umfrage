@@ -78,6 +78,12 @@ function toBoldUnicode(text: string): string {
   });
 }
 
+function boldPercentage(pct: string): string {
+  // Bold only the numeric part (e.g. "43,8"), keep " %" as a separate regular string
+  // Use non-breaking space so HTML doesn't collapse it
+  return toBoldUnicode(pct.replace(/\s*%$/, "")) + " %";
+}
+
 function formatPercentage(count: number, total: number): string {
   if (total === 0) {
     return "0,0 %";
@@ -391,7 +397,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
         toBoldUnicode(section.groupLabel),
         ...(section.items.length > 0
           ? section.items.map(
-              (entry) => `- ${toBoldUnicode(entry.percentage)} – ${entry.label} (${entry.count}/${section.total})`,
+              (entry) => `- ${boldPercentage(entry.percentage)} – ${entry.label} (${entry.count}/${section.total})`,
             )
           : ["- Keine Angaben"]),
       ].join("\n"),
@@ -403,13 +409,13 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
     summarySections
       .map(
         (section) =>
-          `<p><strong>${section.groupLabel}</strong></p>` +
+          `<p>${toBoldUnicode(section.groupLabel)}</p>` +
           (section.items.length > 0
             ? "<ul>" +
               section.items
                 .map(
                   (entry) =>
-                    `<li>${toBoldUnicode(entry.percentage)} – ${entry.label} (${entry.count}/${section.total})</li>`,
+                    `<li>${boldPercentage(entry.percentage)} – ${entry.label} (${entry.count}/${section.total})</li>`,
                 )
                 .join("") +
               "</ul>"
