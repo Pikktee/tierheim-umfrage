@@ -35,6 +35,61 @@ const VOLUNTEERED_QUESTION = "Warst du schon einmal ehrenamtlich engagiert?";
 const ACTIVE_VOLUNTEER_QUESTION = "Engagierst du dich ehrenamtlich?";
 const AGE_QUESTION = "Wie alt bist du?";
 
+const QUESTION_GROUPS: Array<{ label: string; questions: string[] }> = [
+  {
+    label: "Allgemeine Fragen",
+    questions: [
+      "Wie alt bist du?",
+      "Hast du bereits ein Haustier aus einem Tierheim adoptiert?",
+      "Welche Haustiere hast du in der Vergangenheit bereits aus einem Tierheim adoptiert?",
+      "Kannst du dir vorstellen, künftig ein Haustier aus einem Tierheim zu adoptieren?",
+      "Hast du schon einmal ein Haustier bei einem Tierheim abgegeben?",
+      "Könntest du dir vorstellen, ein Haustier an ein Tierheim abzugeben, wenn es die Umstände erfordern würden?",
+      "Warst du schon einmal ehrenamtlich engagiert?",
+      "Engagierst du dich ehrenamtlich?",
+    ],
+  },
+  {
+    label: "Tieradoptierende (25-35 Jahre)",
+    questions: [
+      "Über welche Informationsquellen informierst du dich hauptsächlich?",
+      "Welche Informationsquelle nutzt du am häufigsten?",
+      "Welche Social-Media-Kanäle nutzt du?",
+    ],
+  },
+  {
+    label: "Tieradoptierende (35-45 Jahre)",
+    questions: ["Hast du Kinder?", "Wie viele Kinder hast du?"],
+  },
+  {
+    label: "Tieradoptierende (45-59 Jahre)",
+    questions: [
+      "Hattest du schon einmal ein Haustier?",
+      "Wie viel Erfahrung hast du im Umgang mit Haustieren?",
+      "Was machst du, um Dein Haustier zu erziehen?",
+    ],
+  },
+  {
+    label: "Tierabgebende (18-24 Jahre)",
+    questions: [
+      "Unabhängig vom Thema Tier: Welche belastenden Lebenssituationen hast du bisher erlebt?",
+      "Wie hast du dich während des Abgabeprozesses gefühlt?",
+      "Könntest du dir unter anderen Umständen vorstellen, erneut ein Tier zu adoptieren?",
+      "Was waren die wichtigsten Gründe für deine Entscheidung, dein Tier abzugeben?",
+    ],
+  },
+  {
+    label: "Ehrenamtliche (25-30 Jahre)",
+    questions: [
+      "In welchem Bereich bist du/warst du ehrenamtlich tätig?",
+      "Wie wichtig ist dir eine flexible Zeiteinteilung bei ehrenamtlichen Tätigkeiten?",
+      "Zu welchen Zeiten könntest du dich ehrenamtlich engagieren?",
+      "Was motiviert dich, ehrenamtlich aktiv zu sein?",
+      "Was hält dich aktuell davon ab, dich ehrenamtlich zu engagieren?",
+    ],
+  },
+];
+
 let surveyDataPromise: Promise<SurveyData> | undefined;
 
 function normalizeAge(value: string): string {
@@ -172,19 +227,31 @@ async function loadSurveyData(): Promise<SurveyData> {
   }
 
   const headers = parsed.meta.fields ?? [];
-  const questions: SurveyQuestion[] = headers
-    .filter((header) => header !== "Zeitstempel")
+  const headerSet = new Set(headers.filter((header) => header !== "Zeitstempel"));
+  const groupedQuestions = QUESTION_GROUPS.flatMap((group) =>
+    group.questions
+      .filter((question) => headerSet.has(question))
+      .map((question) => ({
+        id: question,
+        label: question,
+        multiSelect: MULTI_SELECT_QUESTIONS.has(question),
+        groupLabel: group.label,
+      })),
+  );
+
+  const remainingQuestions = [...headerSet]
+    .filter((header) => !groupedQuestions.some((question) => question.id === header))
     .map((header) => ({
       id: header,
       label: header,
       multiSelect: MULTI_SELECT_QUESTIONS.has(header),
+      groupLabel: "Weitere Fragen",
     }));
+
+  const questions: SurveyQuestion[] = [...groupedQuestions, ...remainingQuestions];
 
   const records: SurveyRecord[] = parsed.data.map((row, index) => {
     const ageBracket = normalizeAge(row[AGE_QUESTION] ?? "");
-    const rawAnswers = Object.fromEntries(
-      questions.map((question) => [question.id, row[question.id]?.trim() || "Keine Angabe"]),
-    );
     const answers = Object.fromEntries(
       questions.map((question) => [
         question.id,
@@ -198,7 +265,6 @@ async function loadSurveyData(): Promise<SurveyData> {
       ageBracket,
       groups: getGroups(row, ageBracket),
       answers,
-      rawAnswers,
     };
   });
 

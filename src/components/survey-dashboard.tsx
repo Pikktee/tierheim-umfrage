@@ -142,6 +142,20 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
     () => surveyData.questions.find((question) => question.id === selectedQuestionId) ?? surveyData.questions[0],
     [selectedQuestionId, surveyData.questions],
   );
+  const questionGroups = useMemo(() => {
+    const grouped = new Map<string, typeof surveyData.questions>();
+
+    for (const question of surveyData.questions) {
+      const current = grouped.get(question.groupLabel) ?? [];
+      current.push(question);
+      grouped.set(question.groupLabel, current);
+    }
+
+    return [...grouped.entries()].map(([label, questions]) => ({
+      label,
+      questions,
+    }));
+  }, [surveyData]);
 
   const filteredRecords = useMemo(() => {
     if (selectedGroupId === "all") {
@@ -327,10 +341,14 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                 value={selectedQuestionId}
                 onChange={(event) => setSelectedQuestionId(event.target.value)}
               >
-                {surveyData.questions.map((question) => (
-                  <option key={question.id} value={question.id}>
-                    {question.label}
-                  </option>
+                {questionGroups.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.questions.map((question) => (
+                      <option key={question.id} value={question.id}>
+                        {question.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>

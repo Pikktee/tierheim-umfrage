@@ -10,6 +10,7 @@ export type SurveyQuestion = {
   id: string;
   label: string;
   multiSelect: boolean;
+  groupLabel: string;
 };
 
 export type SurveyRecord = {
