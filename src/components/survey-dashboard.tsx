@@ -65,13 +65,25 @@ function CopyIcon() {
   );
 }
 
+function InfoIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M12 10.25v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="12" cy="7.25" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function SurveyDashboard({ surveyData }: DashboardProps) {
   const questionSelectId = useId();
   const filterGroupId = useId();
   const [selectedQuestionId, setSelectedQuestionId] = useState(surveyData.questions[0]?.id ?? "");
   const [selectedGroupId, setSelectedGroupId] = useState<TargetGroupId>("all");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+  const [isRecordsModalOpen, setIsRecordsModalOpen] = useState(false);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied">("idle");
+  const [openTooltipId, setOpenTooltipId] = useState<TargetGroupId | null>(null);
 
   const selectedQuestion = useMemo(
     () => surveyData.questions.find((question) => question.id === selectedQuestionId) ?? surveyData.questions[0],
@@ -117,22 +129,35 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
   const modalText = chartData
     .map((entry) => `${entry.label}: ${entry.percentage} (${entry.count}/${filteredRecords.length})`)
     .join("\n");
+  const recordsForModal = filteredRecords.map((record) => ({
+    id: record.id,
+    submittedAt: record.submittedAt,
+    ageBracket: record.ageBracket,
+    groups:
+      record.groups.length > 0
+        ? record.groups
+            .map((groupId) => targetGroups.find((group) => group.id === groupId)?.label ?? groupId)
+            .join(", ")
+        : "Keine Zuordnung",
+    answer: (selectedQuestion ? record.answers[selectedQuestion.id] : ["Keine Angabe"]).join(", "),
+  }));
 
   useEffect(() => {
-    if (!isModalOpen) {
+    if (!isSummaryModalOpen && !isRecordsModalOpen) {
       return;
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsModalOpen(false);
+        setIsSummaryModalOpen(false);
+        setIsRecordsModalOpen(false);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isModalOpen]);
+  }, [isRecordsModalOpen, isSummaryModalOpen]);
 
   async function handleCopySummary() {
     try {
@@ -190,17 +215,35 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
               </legend>
               <div className="chip-group" role="radiogroup" aria-labelledby={filterGroupId}>
                 {targetGroups.map((group) => (
-                  <button
-                    key={group.id}
-                    className="chip-button"
-                    type="button"
-                    role="radio"
-                    aria-checked={selectedGroupId === group.id}
-                    data-active={selectedGroupId === group.id}
-                    onClick={() => setSelectedGroupId(group.id)}
-                  >
-                    {group.label}
-                  </button>
+                  <div className="chip-with-tooltip" key={group.id}>
+                    <button
+                      className="chip-button"
+                      type="button"
+                      role="radio"
+                      aria-checked={selectedGroupId === group.id}
+                      data-active={selectedGroupId === group.id}
+                      onClick={() => setSelectedGroupId(group.id)}
+                    >
+                      {group.label}
+                    </button>
+                    <button
+                      className="tooltip-trigger"
+                      type="button"
+                      aria-label={`Hinweis zu ${group.label}`}
+                      aria-expanded={openTooltipId === group.id}
+                      onClick={() => setOpenTooltipId((current) => (current === group.id ? null : group.id))}
+                      onBlur={() => {
+                        window.setTimeout(() => {
+                          setOpenTooltipId((current) => (current === group.id ? null : current));
+                        }, 120);
+                      }}
+                    >
+                      <InfoIcon />
+                    </button>
+                    <div className="tooltip-bubble" data-open={openTooltipId === group.id} role="tooltip">
+                      {group.description}
+                    </div>
+                  </div>
                 ))}
               </div>
             </fieldset>
@@ -215,9 +258,22 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
             </div>
             <div className="chart-actions">
               <p className="small-note">{filteredRecords.length} Datensaetze in der Auswahl</p>
-              <button className="secondary-button" type="button" onClick={() => setIsModalOpen(true)}>
+              <div className="action-row">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => setIsRecordsModalOpen(true)}
+                >
+                  Datensaetze
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => setIsSummaryModalOpen(true)}
+                >
                 Textausgabe
-              </button>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -314,13 +370,13 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
         </section>
       </section>
 
-      {isModalOpen ? (
+      {isSummaryModalOpen ? (
         <div
           className="modal-backdrop"
           role="presentation"
           onClick={(event) => {
             if (event.target === event.currentTarget) {
-              setIsModalOpen(false);
+              setIsSummaryModalOpen(false);
             }
           }}
         >
@@ -341,7 +397,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                 <button className="icon-button" type="button" onClick={handleCopySummary} aria-label="Textausgabe kopieren">
                   <CopyIcon />
                 </button>
-                <button className="close-button" type="button" onClick={() => setIsModalOpen(false)}>
+                <button className="close-button" type="button" onClick={() => setIsSummaryModalOpen(false)}>
                   Schliessen
                 </button>
               </div>
@@ -358,6 +414,64 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
             <p className="copy-status" aria-live="polite">
               {copyStatus === "copied" ? "Textausgabe wurde in die Zwischenablage kopiert." : " "}
             </p>
+          </section>
+        </div>
+      ) : null}
+
+      {isRecordsModalOpen ? (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setIsRecordsModalOpen(false);
+            }
+          }}
+        >
+          <section
+            className="modal-card modal-card-wide"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="records-modal-title"
+          >
+            <div className="modal-header">
+              <div>
+                <p className="small-note">Datensaetze hinter dem Chart</p>
+                <h2 className="modal-title" id="records-modal-title">
+                  {selectedQuestion?.label}
+                </h2>
+              </div>
+              <div className="modal-actions">
+                <button className="close-button" type="button" onClick={() => setIsRecordsModalOpen(false)}>
+                  Schliessen
+                </button>
+              </div>
+            </div>
+
+            <div className="table-wrap">
+              <table className="records-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Datensatz</th>
+                    <th scope="col">Zeitstempel</th>
+                    <th scope="col">Alter</th>
+                    <th scope="col">Zielgruppen</th>
+                    <th scope="col">Antwort</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recordsForModal.map((record) => (
+                    <tr key={record.id}>
+                      <td>{record.id}</td>
+                      <td>{record.submittedAt}</td>
+                      <td>{record.ageBracket}</td>
+                      <td>{record.groups}</td>
+                      <td>{record.answer}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         </div>
       ) : null}

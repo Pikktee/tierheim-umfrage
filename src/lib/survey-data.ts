@@ -190,6 +190,7 @@ async function loadSurveyData(): Promise<SurveyData> {
 
     return {
       id: `response-${index + 1}`,
+      submittedAt: row["Zeitstempel"]?.trim() || "Keine Angabe",
       ageBracket,
       groups: getGroups(row, ageBracket),
       answers,

@@ -179,6 +179,13 @@ select:focus-visible {
   gap: 0.65rem;
 }
 
+.chip-with-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .chip-button {
   border: 1px solid rgba(92, 70, 47, 0.16);
   border-radius: 999px;
@@ -203,6 +210,46 @@ select:focus-visible {
   color: #fff8f1;
 }
 
+.tooltip-trigger {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(92, 70, 47, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 250, 243, 0.98);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.tooltip-bubble {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.45rem);
+  z-index: 10;
+  width: min(320px, 70vw);
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid rgba(92, 70, 47, 0.14);
+  background: #fffaf4;
+  box-shadow: 0 18px 40px rgba(31, 26, 23, 0.12);
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.tooltip-bubble[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
 .chart-header {
   display: flex;
   justify-content: space-between;
@@ -220,6 +267,13 @@ select:focus-visible {
   display: grid;
   justify-items: end;
   gap: 0.5rem;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
 }
 
 .secondary-button,
@@ -298,6 +352,10 @@ select:focus-visible {
   box-shadow: 0 24px 80px rgba(31, 26, 23, 0.2);
 }
 
+.modal-card-wide {
+  width: min(1080px, 100%);
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -334,6 +392,36 @@ select:focus-visible {
 
 .modal-list li + li {
   margin-top: 0.5rem;
+}
+
+.table-wrap {
+  margin-top: 1rem;
+  overflow: auto;
+  border: 1px solid rgba(92, 70, 47, 0.1);
+  border-radius: 16px;
+}
+
+.records-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  background: #fffdf9;
+}
+
+.records-table th,
+.records-table td {
+  padding: 0.85rem 0.9rem;
+  border-bottom: 1px solid rgba(92, 70, 47, 0.08);
+  text-align: left;
+  vertical-align: top;
+}
+
+.records-table th {
+  position: sticky;
+  top: 0;
+  background: #f8efe5;
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .copy-status {
@@ -390,8 +478,12 @@ select:focus-visible {
     gap: 0.5rem;
   }
 
-  .chip-button {
+  .chip-with-tooltip {
     width: 100%;
+  }
+
+  .chip-button {
+    flex: 1;
     text-align: left;
   }
 
@@ -409,6 +501,15 @@ select:focus-visible {
   }
 
   .close-button {
+    flex: 1;
+  }
+
+  .action-row {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .secondary-button {
     flex: 1;
   }
 }
