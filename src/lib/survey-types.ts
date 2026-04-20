@@ -18,7 +18,6 @@ export type SurveyRecord = {
   ageBracket: string;
   groups: TargetGroupId[];
   answers: Record<string, string[]>;
-  rawAnswers: Record<string, string>;
 };
 
 export type SurveyData = {
@@ -34,7 +33,7 @@ export const targetGroups: Array<{
 }> = [
   {
     id: "all",
-    label: "Alle Datensätze",
+    label: "Alle",
     description: "Zeigt alle Antworten aus der Umfrage ohne zusätzliche Filterung nach Alter oder Rolle.",
   },
   {

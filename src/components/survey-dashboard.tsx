@@ -75,6 +75,28 @@ function formatPercentage(count: number, total: number): string {
   return `${((count / total) * 100).toFixed(1).replace(".", ",")} %`;
 }
 
+function buildChartData(records: SurveyData["records"], questionId: string) {
+  const counts = new Map<string, number>();
+
+  for (const record of records) {
+    const answers = record.answers[questionId] ?? ["Keine Angabe"];
+    const uniqueAnswers = [...new Set(answers)];
+
+    for (const answer of uniqueAnswers) {
+      counts.set(answer, (counts.get(answer) ?? 0) + 1);
+    }
+  }
+
+  return [...counts.entries()]
+    .map(([label, count], index) => ({
+      label,
+      count,
+      percentage: formatPercentage(count, records.length),
+      fill: chartColors[index % chartColors.length],
+    }))
+    .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, "de"));
+}
+
 function CopyIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none">
@@ -134,33 +156,45 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
       return [];
     }
 
-    const counts = new Map<string, number>();
-
-    for (const record of filteredRecords) {
-      const answers = record.answers[selectedQuestion.id] ?? ["Keine Angabe"];
-      const uniqueAnswers = [...new Set(answers)];
-
-      for (const answer of uniqueAnswers) {
-        counts.set(answer, (counts.get(answer) ?? 0) + 1);
-      }
-    }
-
-    return [...counts.entries()]
-      .map(([label, count], index) => ({
-        label,
-        count,
-        percentage: formatPercentage(count, filteredRecords.length),
-        fill: chartColors[index % chartColors.length],
-      }))
-      .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, "de"));
+    return buildChartData(filteredRecords, selectedQuestion.id);
   }, [filteredRecords, selectedQuestion]);
 
   const activeGroup = targetGroups.find((group) => group.id === selectedGroupId) ?? targetGroups[0];
   const isMultiSelect = selectedQuestion?.multiSelect ?? false;
   const relevantQuestions = relevantQuestionsByGroup[selectedGroupId];
-  const modalText = chartData
-    .map((entry) => `${entry.label}: ${entry.percentage} (${entry.count}/${filteredRecords.length})`)
-    .join("\n");
+  const summarySections = useMemo(() => {
+    if (!selectedQuestion) {
+      return [];
+    }
+
+    const groupsToShow =
+      selectedGroupId === "all"
+        ? targetGroups.filter((group) => group.id !== "all")
+        : [activeGroup];
+
+    return groupsToShow.map((group) => {
+      const records =
+        group.id === "all"
+          ? surveyData.records
+          : surveyData.records.filter((record) => record.groups.includes(group.id));
+
+      return {
+        groupLabel: group.label,
+        total: records.length,
+        items: buildChartData(records, selectedQuestion.id).map((entry) => ({
+          label: entry.label,
+          count: entry.count,
+          percentage: entry.percentage,
+        })),
+      };
+    });
+  }, [activeGroup, selectedGroupId, selectedQuestion, surveyData.records]);
+
+  const modalText = summarySections
+    .map((section) =>
+      [section.groupLabel, ...section.items.map((entry) => `${entry.label}: ${entry.percentage} (${entry.count}/${section.total})`)].join("\n"),
+    )
+    .join("\n\n");
   const recordsForModal = filteredRecords.map((record, index) => ({
     number: index + 1,
     submittedAt: record.submittedAt,
@@ -304,25 +338,24 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                       role="radio"
                       aria-checked={selectedGroupId === group.id}
                       data-active={selectedGroupId === group.id}
+                      aria-describedby={`group-help-${group.id}`}
                       onClick={() => setSelectedGroupId(group.id)}
+                      onMouseEnter={() => setOpenTooltipId(group.id)}
+                      onMouseLeave={() => setOpenTooltipId((current) => (current === group.id ? null : current))}
+                      onFocus={() => setOpenTooltipId(group.id)}
+                      onBlur={() => setOpenTooltipId((current) => (current === group.id ? null : current))}
                     >
-                      {group.label}
+                      <span>{group.label}</span>
+                      <span className="chip-button-icon" aria-hidden="true">
+                        <InfoIcon />
+                      </span>
                     </button>
-                    <button
-                      className="tooltip-trigger"
-                      type="button"
-                      aria-label={`Hinweis zu ${group.label}`}
-                      aria-expanded={openTooltipId === group.id}
-                      onClick={() => setOpenTooltipId((current) => (current === group.id ? null : group.id))}
-                      onBlur={() => {
-                        window.setTimeout(() => {
-                          setOpenTooltipId((current) => (current === group.id ? null : current));
-                        }, 120);
-                      }}
+                    <div
+                      className="tooltip-bubble"
+                      data-open={openTooltipId === group.id}
+                      role="tooltip"
+                      id={`group-help-${group.id}`}
                     >
-                      <InfoIcon />
-                    </button>
-                    <div className="tooltip-bubble" data-open={openTooltipId === group.id} role="tooltip">
                       {group.description}
                     </div>
                   </div>
@@ -346,7 +379,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                   type="button"
                   onClick={() => setIsRecordsModalOpen(true)}
                 >
-                  Datensaetze
+                  Datensätze
                 </button>
                 <button
                   className="secondary-button"
@@ -485,13 +518,22 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
               </div>
             </div>
 
-            <ul className="modal-list">
-              {chartData.map((entry) => (
-                <li key={entry.label}>
-                  {entry.label}: {entry.percentage} ({entry.count}/{filteredRecords.length})
-                </li>
+            <div className="summary-sections">
+              {summarySections.map((section) => (
+                <section className="summary-section" key={section.groupLabel}>
+                  <p className="summary-group-label">
+                    <strong>{section.groupLabel}</strong>
+                  </p>
+                  <ul className="modal-list">
+                    {section.items.map((entry) => (
+                      <li key={`${section.groupLabel}-${entry.label}`}>
+                        {entry.label}: {entry.percentage} ({entry.count}/{section.total})
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               ))}
-            </ul>
+            </div>
 
             <p className="copy-status" aria-live="polite">
               {copyStatus === "copied" ? "Textausgabe wurde in die Zwischenablage kopiert." : " "}
