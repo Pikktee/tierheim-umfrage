@@ -781,7 +781,9 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                         {surveyData.questions.find((question) => question.id === questionId)?.label ?? questionId}
                       </th>
                     ))}
-                    <th scope="col">{selectedQuestion?.label ?? "Antwort"}</th>
+                    {selectedQuestion && !relevantQuestions.includes(selectedQuestion.id) ? (
+                      <th scope="col">{selectedQuestion.label}</th>
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -793,7 +795,9 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                       {record.relevantAnswers.map((entry) => (
                         <td key={`${record.number}-${entry.questionId}`}>{entry.value}</td>
                       ))}
-                      <td>{record.answer}</td>
+                      {selectedQuestion && !relevantQuestions.includes(selectedQuestion.id) ? (
+                        <td>{record.answer}</td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>

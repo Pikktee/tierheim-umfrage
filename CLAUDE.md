@@ -10,6 +10,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 No test framework is configured.
 
+## Deployment
+
+Always deploy to **Railway** (project `tierheim-umfrage`, service `tierheim-umfrage`). Do **not** deploy to Vercel.
+
+- Deploy current working tree: `railway up --service tierheim-umfrage`
+- Redeploy latest: `railway redeploy --service tierheim-umfrage`
+
 ## Architecture
 
 Next.js 16 App Router project (TypeScript, React 19) that visualizes survey results from a German animal shelter (Tierheim Hanau). Single-page dashboard with charts powered by Recharts.
