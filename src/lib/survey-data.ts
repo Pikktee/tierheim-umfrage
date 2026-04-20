@@ -20,6 +20,7 @@ const MULTI_SELECT_QUESTIONS = new Set<string>([
   "Zu welchen Zeiten könntest du dich ehrenamtlich engagieren?",
   "Was motiviert dich, ehrenamtlich aktiv zu sein?",
   "Was hält dich aktuell davon ab, dich ehrenamtlich zu engagieren?",
+  "In welchem Bereich bist du/warst du ehrenamtlich tätig?",
 ]);
 
 const ADOPTED_QUESTION =
@@ -181,6 +182,9 @@ async function loadSurveyData(): Promise<SurveyData> {
 
   const records: SurveyRecord[] = parsed.data.map((row, index) => {
     const ageBracket = normalizeAge(row[AGE_QUESTION] ?? "");
+    const rawAnswers = Object.fromEntries(
+      questions.map((question) => [question.id, row[question.id]?.trim() || "Keine Angabe"]),
+    );
     const answers = Object.fromEntries(
       questions.map((question) => [
         question.id,
@@ -194,6 +198,7 @@ async function loadSurveyData(): Promise<SurveyData> {
       ageBracket,
       groups: getGroups(row, ageBracket),
       answers,
+      rawAnswers,
     };
   });
 

@@ -18,6 +18,7 @@ export type SurveyRecord = {
   ageBracket: string;
   groups: TargetGroupId[];
   answers: Record<string, string[]>;
+  rawAnswers: Record<string, string>;
 };
 
 export type SurveyData = {

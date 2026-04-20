@@ -405,9 +405,8 @@ select:focus-visible {
 
 .records-table {
   width: max-content;
-  min-width: 100%;
+  min-width: max-content;
   border-collapse: collapse;
-  min-width: 980px;
   background: #fffdf9;
 }
 
@@ -417,7 +416,8 @@ select:focus-visible {
   border-bottom: 1px solid rgba(92, 70, 47, 0.08);
   text-align: left;
   vertical-align: top;
-  min-width: 150px;
+  width: 1%;
+  white-space: nowrap;
 }
 
 .records-table th {

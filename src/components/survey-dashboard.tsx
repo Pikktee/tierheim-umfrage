@@ -166,11 +166,11 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
             .map((groupId) => targetGroups.find((group) => group.id === groupId)?.label ?? groupId)
             .join(", ")
         : "Keine Zuordnung",
-    answer: (selectedQuestion ? record.answers[selectedQuestion.id] : ["Keine Angabe"]).join(", "),
+    answer: selectedQuestion ? record.rawAnswers[selectedQuestion.id] : "Keine Angabe",
     relevantAnswers: relevantQuestions.map((questionId) => ({
       questionId,
       questionLabel: surveyData.questions.find((question) => question.id === questionId)?.label ?? questionId,
-      value: (record.answers[questionId] ?? ["Keine Angabe"]).join(", "),
+      value: record.rawAnswers[questionId] ?? "Keine Angabe",
     })),
   }));
 
