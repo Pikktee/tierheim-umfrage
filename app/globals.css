@@ -688,9 +688,19 @@ legend.control-label {
   background-clip: padding-box;
 }
 
-.copy-status {
-  min-height: 1.4rem;
-  margin: 1rem 0 0;
+.copy-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.copy-button[data-state="copied"] {
+  background: rgba(47, 111, 98, 0.14);
+  border-color: rgba(47, 111, 98, 0.45);
   color: var(--secondary);
 }
 

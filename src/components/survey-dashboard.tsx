@@ -114,6 +114,37 @@ function CopyIcon() {
   );
 }
 
+const PIE_LABEL_RADIAN = Math.PI / 180;
+
+function renderPiePercentLabel(props: import("recharts").PieLabelRenderProps) {
+  const cx = Number(props.cx ?? 0);
+  const cy = Number(props.cy ?? 0);
+  const midAngle = Number(props.midAngle ?? 0);
+  const innerRadius = Number(props.innerRadius ?? 0);
+  const outerRadius = Number(props.outerRadius ?? 0);
+  const percent = Number(props.percent ?? 0);
+  const payload = props.payload as { percentage?: string } | undefined;
+  if (percent < 0.03 || !payload?.percentage) {
+    return null;
+  }
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.55;
+  const x = cx + radius * Math.cos(-midAngle * PIE_LABEL_RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * PIE_LABEL_RADIAN);
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#1F1A17"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize={12}
+      fontWeight={600}
+    >
+      {payload.percentage}
+    </text>
+  );
+}
+
 function ChevronIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none">
@@ -532,7 +563,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                   type="button"
                   onClick={() => setIsSummaryModalOpen(true)}
                 >
-                  Textausgabe
+                  Export
                 </button>
               </div>
             </div>
@@ -594,6 +625,9 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                       innerRadius={82}
                       outerRadius={140}
                       paddingAngle={2}
+                      label={renderPiePercentLabel}
+                      labelLine={false}
+                      isAnimationActive={false}
                     >
                       {chartData.map((entry) => (
                         <Cell key={entry.label} fill={entry.fill} />
@@ -649,14 +683,30 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
           >
             <div className="modal-header">
               <div>
-                <p className="small-note">Textausgabe</p>
+                <p className="small-note">Export nach FigJam</p>
                 <h2 className="modal-title" id="summary-modal-title">
                   {selectedQuestion?.label}
                 </h2>
               </div>
               <div className="modal-actions">
-                <button className="icon-button" type="button" onClick={handleCopySummary} aria-label="Textausgabe kopieren">
-                  <CopyIcon />
+                <button
+                  className="secondary-button copy-button"
+                  type="button"
+                  onClick={handleCopySummary}
+                  data-state={copyStatus}
+                  aria-live="polite"
+                >
+                  {copyStatus === "copied" ? (
+                    <>
+                      <CheckIcon />
+                      <span>Kopiert</span>
+                    </>
+                  ) : (
+                    <>
+                      <CopyIcon />
+                      <span>Kopieren</span>
+                    </>
+                  )}
                 </button>
                 <button className="close-button" type="button" onClick={() => setIsSummaryModalOpen(false)}>
                   Schliessen
@@ -681,9 +731,6 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
               ))}
             </div>
 
-            <p className="copy-status" aria-live="polite">
-              {copyStatus === "copied" ? "Textausgabe wurde in die Zwischenablage kopiert." : " "}
-            </p>
           </section>
         </div>
       ) : null}
