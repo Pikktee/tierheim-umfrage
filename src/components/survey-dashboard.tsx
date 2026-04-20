@@ -657,11 +657,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
             </div>
           )}
 
-          {isMultiSelect ? (
-            <p className="legend-note">
-              Mehrfachauswahl wird als Balkendiagramm gezeigt. Die Prozentwerte koennen in Summe ueber 100 % liegen.
-            </p>
-          ) : null}
+
         </section>
       </section>
 
