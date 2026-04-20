@@ -23,6 +23,45 @@ const MULTI_SELECT_QUESTIONS = new Set<string>([
   "In welchem Bereich bist du/warst du ehrenamtlich tätig?",
 ]);
 
+const MULTI_SELECT_OPTIONS = new Map<string, Set<string>>([
+  [
+    "Welche Haustiere hast du in der Vergangenheit bereits aus einem Tierheim adoptiert?",
+    new Set(["Hund", "Katze", "Kanninchen", "Meerschweinchen", "Fische", "Wellensittich"]),
+  ],
+  [
+    "Über welche Informationsquellen informierst du dich hauptsächlich?",
+    new Set(["Google-Suche", "Social Media", "Foren", "Freundeskreis", "KI-Chatbots", "Print-Medien", "Radio", "Online-Magazine", "Literatur", "Digitale Medien / Verlagshäuser", "Abonnements von Blogs"]),
+  ],
+  [
+    "Welche Social-Media-Kanäle nutzt du?",
+    new Set(["Instagram", "Facebook", "YouTube", "TikTok", "Twitter", "Telegram", "WhatsApp", "Signal", "Spotify", "Mastodon"]),
+  ],
+  [
+    "Was machst du, um Dein Haustier zu erziehen?",
+    new Set(["Ich gehe in eine Hundeschule", "Ich schaue YouTube-Videos", "Ich lese Bücher oder informiere mich im Internet", "Ich trainiere selbst zu Hause", "Ich nutze Belohnungen (Leckerlis, Lob)", "Ich hole mir Tipps von Freunden oder Familie", "Ich mache nichts Besonderes"]),
+  ],
+  [
+    "Unabhängig vom Thema Tier: Welche belastenden Lebenssituationen hast du bisher erlebt?",
+    new Set(["Umzug / Wohnungswechsel", "Trennung / Scheidung", "Zeitmangel (z. B. durch Arbeit)", "Finanzielle Probleme", "Krankheit (eigene oder in der Familie)", "Allergie gegen Tiere", "Geburt eines Kindes", "Probleme mit dem Verhalten des Tieres", "Tod eines Familienmitglieds", "Überforderung im Alltag", "Das möchte ich nicht beantworten"]),
+  ],
+  [
+    "Zu welchen Zeiten könntest du dich ehrenamtlich engagieren?",
+    new Set(["Wochentags vormittags", "Wochentags nachmittags", "Wochentags abends", "Samstags", "Sonntags", "Flexibel / je nach Bedarf"]),
+  ],
+  [
+    "Was motiviert dich, ehrenamtlich aktiv zu sein?",
+    new Set(["Tieren helfen und etwas Gutes tun", "Soziale Kontakte knüpfen", "Sinnvolle Freizeitgestaltung", "Eigene Fähigkeiten einbringen", "Neue Erfahrungen sammeln", "Gesellschaftliche Verantwortung übernehmen"]),
+  ],
+  [
+    "Was hält dich aktuell davon ab, dich ehrenamtlich zu engagieren?",
+    new Set(["Zeitmangel (Arbeit, Schule, Studium)", "Familiäre Verpflichtungen", "Fehlende Informationen über Möglichkeiten", "Berufliche Belastung / Stress", "Gesundheitliche Gründe", "Fehlende Motivation", "Entfernung / schlechte Erreichbarkeit", "Finanzielle Gründe (z. B. Fahrtkosten)", "Behinderung"]),
+  ],
+  [
+    "In welchem Bereich bist du/warst du ehrenamtlich tätig?",
+    new Set(["Tierschutz / Tierheim", "Soziale Arbeit", "Sportverein", "Kultur / Kunst / Musik", "Umwelt- und Naturschutz", "Kirche / Seelsorge", "Katastrophenschutz / Feuerwehr / Rettungsdienst", "Flüchtlingshilfe / Integration", "Ich war nicht ehrenamtlich tätig"]),
+  ],
+]);
+
 const ADOPTED_QUESTION =
   "Hast du bereits ein Haustier aus einem Tierheim adoptiert?";
 const FUTURE_ADOPTION_QUESTION =
@@ -145,6 +184,30 @@ function splitMultiValue(value: string): string[] {
   return tokens;
 }
 
+function splitWithKnownOptions(value: string, knownOptions: Set<string>): string[] {
+  const parts = splitMultiValue(value).map((p) => p.trim()).filter(Boolean);
+  const result: string[] = [];
+  let freeformParts: string[] = [];
+
+  for (const part of parts) {
+    if (knownOptions.has(part)) {
+      if (freeformParts.length > 0) {
+        result.push(freeformParts.join(", "));
+        freeformParts = [];
+      }
+      result.push(part);
+    } else {
+      freeformParts.push(part);
+    }
+  }
+
+  if (freeformParts.length > 0) {
+    result.push(freeformParts.join(", "));
+  }
+
+  return result;
+}
+
 function normalizeAnswer(question: string, rawValue: string): string[] {
   const cleaned = rawValue.trim();
 
@@ -153,9 +216,11 @@ function normalizeAnswer(question: string, rawValue: string): string[] {
   }
 
   if (MULTI_SELECT_QUESTIONS.has(question)) {
-    return splitMultiValue(cleaned)
-      .map((part) => part.trim())
-      .filter(Boolean);
+    const knownOptions = MULTI_SELECT_OPTIONS.get(question);
+    if (knownOptions) {
+      return splitWithKnownOptions(cleaned, knownOptions);
+    }
+    return splitMultiValue(cleaned).map((part) => part.trim()).filter(Boolean);
   }
 
   return [question === AGE_QUESTION ? normalizeAge(cleaned) : cleaned];
