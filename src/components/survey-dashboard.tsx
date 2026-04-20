@@ -379,18 +379,38 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
       [section.groupLabel, ...section.items.map((entry) => `${entry.label}: ${entry.percentage} (${entry.count}/${section.total})`)].join("\n"),
     )
     .join("\n\n");
-  const figJamMarkdownText = summarySections
+  const figJamPlainText = summarySections
     .map((section) =>
       [
-        `**${section.groupLabel}**`,
+        section.groupLabel,
         ...(section.items.length > 0
           ? section.items.map(
-              (entry) => `- **${entry.percentage}** - ${entry.label} (${entry.count}/${section.total})`,
+              (entry) => `- ${entry.percentage} - ${entry.label} (${entry.count}/${section.total})`,
             )
           : ["- Keine Angaben"]),
       ].join("\n"),
     )
-    .join("\n\n");
+    .join("\n");
+
+  const figJamHtmlText =
+    "<div>" +
+    summarySections
+      .map(
+        (section) =>
+          `<p><strong>${section.groupLabel}</strong></p>` +
+          (section.items.length > 0
+            ? "<ul>" +
+              section.items
+                .map(
+                  (entry) =>
+                    `<li><strong>${entry.percentage}</strong> – ${entry.label} (${entry.count}/${section.total})</li>`,
+                )
+                .join("") +
+              "</ul>"
+            : "<p><em>Keine Angaben</em></p>"),
+      )
+      .join("") +
+    "</div>";
   const recordsForModal = filteredRecords.map((record) => ({
     number: record.csvRow,
     submittedAt: record.submittedAt,
@@ -473,7 +493,12 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
 
   async function handleCopySummary() {
     try {
-      await navigator.clipboard.writeText(figJamMarkdownText);
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([figJamHtmlText], { type: "text/html" }),
+          "text/plain": new Blob([figJamPlainText], { type: "text/plain" }),
+        }),
+      ]);
       setCopyStatus("copied");
       window.setTimeout(() => setCopyStatus("idle"), 1600);
     } catch {
