@@ -117,8 +117,8 @@ select:focus-visible {
 .hero-logo {
   order: 2;
   flex: 0 0 auto;
-  width: 80px;
-  height: 80px;
+  width: 92px;
+  height: 92px;
   object-fit: contain;
   filter:
     drop-shadow(0 6px 18px rgba(139, 62, 24, 0.22))
@@ -158,10 +158,10 @@ select:focus-visible {
 
 .hero h1 {
   margin: 0;
-  font-size: clamp(1.8rem, 4.5vw, 3.1rem);
-  line-height: 1;
-  letter-spacing: -0.045em;
-  font-weight: 800;
+  font-size: clamp(1.45rem, 3.5vw, 2.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: 600;
   color: var(--text);
 }
 
