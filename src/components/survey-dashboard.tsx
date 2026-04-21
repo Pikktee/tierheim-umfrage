@@ -324,6 +324,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied">("idle");
   const [openTooltipId, setOpenTooltipId] = useState<TargetGroupId | null>(null);
   const [tableScrollWidth, setTableScrollWidth] = useState(0);
+  const [tableOverflows, setTableOverflows] = useState(false);
 
   const selectedQuestion = useMemo(
     () => surveyData.questions.find((question) => question.id === selectedQuestionId) ?? surveyData.questions[0],
@@ -463,7 +464,10 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
     }
 
     const syncWidths = () => {
-      setTableScrollWidth(tableInnerRef.current?.scrollWidth ?? 0);
+      const scrollWidth = tableInnerRef.current?.scrollWidth ?? 0;
+      const clientWidth = tableScrollRef.current?.clientWidth ?? 0;
+      setTableScrollWidth(scrollWidth);
+      setTableOverflows(scrollWidth > clientWidth);
     };
 
     syncWidths();
@@ -821,6 +825,7 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
               className="table-wrap"
               ref={tableScrollRef}
               onScroll={() => syncTableScroll("table")}
+              style={tableOverflows ? undefined : { borderRadius: 16 }}
             >
               <table className="records-table" ref={tableInnerRef}>
                 <thead>
@@ -855,14 +860,16 @@ export function SurveyDashboard({ surveyData }: DashboardProps) {
                 </tbody>
               </table>
             </div>
-            <div
-              className="table-scrollbar"
-              ref={bottomScrollRef}
-              onScroll={() => syncTableScroll("bottom")}
-              aria-label="Horizontaler Scrollbalken fuer die Datensatz-Tabelle"
-            >
-              <div style={{ width: tableScrollWidth > 0 ? `${tableScrollWidth}px` : "100%" }} />
-            </div>
+            {tableOverflows ? (
+              <div
+                className="table-scrollbar"
+                ref={bottomScrollRef}
+                onScroll={() => syncTableScroll("bottom")}
+                aria-label="Horizontaler Scrollbalken fuer die Datensatz-Tabelle"
+              >
+                <div style={{ width: `${tableScrollWidth}px` }} />
+              </div>
+            ) : null}
           </section>
         </div>
       ) : null}
